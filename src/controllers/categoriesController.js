@@ -29,3 +29,18 @@ export async function createCategory(req, res) {
     res.status(httpStatus.INTERNAL_SERVER_ERROR).send(error.message);
   }
 };
+
+export async function getCategories(req, res) {
+  try {
+    const categories = await connectionDB.query(`
+      SELECT
+        *
+      FROM
+        categories;`);
+
+    res.send(categories.rows);
+    
+  } catch (error) {
+    res.status(httpStatus.INTERNAL_SERVER_ERROR).send(error.message);
+  }
+};
