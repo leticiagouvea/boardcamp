@@ -276,3 +276,38 @@ export async function createFinishedRental(req, res) {
     res.status(httpStatus.INTERNAL_SERVER_ERROR).send(error.message);
   }
 };
+
+export async function deleteRental(req, res) {
+  const { id } = req.params;
+
+  try {
+    const rental = await connectionDB.query(`
+      SELECT
+        *
+      FROM
+        rentals
+      WHERE
+        id = $1;`, [id]);
+    
+    if (rental.rowCount === 0) {
+      return res.sendStatus(httpStatus.NOT_FOUND);
+    }
+
+    const rentalFinished = rental.rows.find(value => value.returnDate !== null);
+
+    if (!rentalFinished) {
+      return res.sendStatus(httpStatus.BAD_REQUEST);
+    }
+
+    await connectionDB.query(`
+      DELETE FROM
+        rentals
+      WHERE
+        id = $1;`, [Number(id)]);
+
+    res.sendStatus(httpStatus.OK);
+
+  } catch (error) {
+    res.status(httpStatus.INTERNAL_SERVER_ERROR).send(error.message);
+  }
+};
