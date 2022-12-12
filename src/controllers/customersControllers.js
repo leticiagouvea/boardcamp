@@ -64,3 +64,26 @@ export async function getCustomers(req, res) {
     res.status(httpStatus.INTERNAL_SERVER_ERROR).send(error.message);
   }
 };
+
+export async function getCustomersId(req, res) {
+  const { id } = req.params;
+
+  try {
+    const customer = await connectionDB.query(`
+      SELECT
+        *
+      FROM
+        customers
+      WHERE
+        id = $1`, [Number(id)]);
+
+    if (customer.rowCount === 0) {
+      return res.sendStatus(httpStatus.NOT_FOUND);
+    }
+
+    res.send(customer.rows);
+
+  } catch (error) {
+    res.status(httpStatus.INTERNAL_SERVER_ERROR).send(error.message);
+  }
+};
