@@ -14,14 +14,14 @@ export async function createCategory(req, res) {
     const categoriesExists = categories.rows.find(value => value.name.toLowerCase() === name.toLowerCase());
 
     if (categoriesExists) {
-      return sendStatus(httpStatus.CONFLICT);
+      return res.sendStatus(httpStatus.CONFLICT);
     }
 
     await connectionDB.query(`
-    INSERT INTO
-      categories (name)
-    VALUES
-      ($1);`, [name]);
+      INSERT INTO
+        categories (name)
+      VALUES
+        ($1);`, [name]);
 
     res.sendStatus(httpStatus.CREATED);
     
