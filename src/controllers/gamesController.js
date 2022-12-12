@@ -41,3 +41,59 @@ export async function createGame(req, res) {
     res.status(httpStatus.INTERNAL_SERVER_ERROR).send(error.message);
   }
 };
+
+export async function getGames(req, res) {
+  const { name } = req.query;
+
+  try {
+    if(!name) {
+      const games = await connectionDB.query(`
+        SELECT
+          games.id,
+          games.name,
+          games.image,
+          games."stockTotal",
+          games."pricePerDay",
+          categories.id AS "categoryId",
+          categories.name AS "categoryName"
+        FROM
+          games
+          JOIN categories ON games."categoryId" = categories.id;`);
+
+      return res.send(games.rows); 
+    }
+
+    const gameExists = await connectionDB.query(`
+      SELECT
+        *
+      FROM
+        games
+      WHERE
+        games.name
+      ILIKE $1;`, [name]);
+
+      if(gameExists.rowCount === 0) {
+        return res.sendStatus(httpStatus.NOT_FOUND);
+      }
+
+      const game = await connectionDB.query(`
+        SELECT
+          games.id,
+          games.name,
+          games.image,
+          games."stockTotal",
+          games."pricePerDay",
+          categories.id AS "categoryId",
+          categories.name AS "categoryName"
+        FROM
+          games
+          JOIN categories ON games."categoryId" = categories.id
+        WHERE
+          games.name ILIKE $1;`, [name]);
+
+      res.send(game.rows);
+
+  } catch (error) {
+    res.status(httpStatus.INTERNAL_SERVER_ERROR).send(error.message);
+  }
+};
