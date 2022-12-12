@@ -1,10 +1,10 @@
 import { Router } from 'express';
-import { createRental } from '../controllers/rentalsControllers.js';
+import { createRental, getRentals } from '../controllers/rentalsControllers.js';
 import { validateRental } from '../middlewares/joiMiddlewares.js';
 
 const router = Router();
 router
-  .post('/rentals', validateRental, createRental);
-  /* .get('/rentals', ); */
+  .post('/rentals', validateRental, createRental)
+  .get('/rentals', getRentals);
 
 export default router;
