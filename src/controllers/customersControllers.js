@@ -30,3 +30,37 @@ export async function createCustomers(req, res) {
     res.status(httpStatus.INTERNAL_SERVER_ERROR).send(error.message);
   }
 };
+
+export async function getCustomers(req, res) {
+  const { cpf } = req.query;
+
+  try {
+    if (!cpf) {
+      const customers = await connectionDB.query(`
+        SELECT
+          *
+        FROM
+          customers;`);
+      
+      return res.send(customers.rows);
+    }
+
+    const customer = await connectionDB.query(`
+      SELECT
+        *
+      FROM
+        customers
+      WHERE
+        cpf
+      LIKE $1;`, [`${cpf}%`]);
+
+      if (customer.rowCount === 0) {
+        res.sendStatus(httpStatus.NOT_FOUND);
+      }
+
+      res.send(customer.rows);
+
+  } catch (error) {
+    res.status(httpStatus.INTERNAL_SERVER_ERROR).send(error.message);
+  }
+};

@@ -1,10 +1,10 @@
 import { Router } from 'express';
-import { createCustomers } from '../controllers/customersControllers.js';
+import { createCustomers, getCustomers } from '../controllers/customersControllers.js';
 import { validateCustomer } from '../middlewares/joiMiddlewares.js';
 
 const router = Router();
 router
   .post('/customers', validateCustomer, createCustomers)
-/*   .get('/customers', getGames); */
+  .get('/customers', getCustomers);
 
 export default router;
