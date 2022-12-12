@@ -87,3 +87,48 @@ export async function getCustomersId(req, res) {
     res.status(httpStatus.INTERNAL_SERVER_ERROR).send(error.message);
   }
 };
+
+export async function updateCustomer(req, res) {
+  const { name, phone, cpf, birthday } = res.locals.user;
+  const { id } = req.params;
+
+  try {
+    const customerById = await connectionDB.query(`
+      SELECT
+        *
+      FROM
+        customers
+      WHERE
+        id = $1`, [Number(id)]);
+
+    if (customerById.rowCount === 0) {
+      return res.sendStatus(httpStatus.NOT_FOUND);
+    }
+
+    const customersByCpf = await connectionDB.query(`
+      SELECT
+        *
+      FROM
+        customers
+      WHERE
+        cpf
+      ILIKE $1;`, [cpf]);
+
+    if (customersByCpf.rowCount > 0) {
+      return res.sendStatus(httpStatus.CONFLICT);
+    }
+
+    await connectionDB.query(`
+      UPDATE
+        customers
+      SET
+        name = $1, phone = $2, cpf = $3, birthday = $4
+      WHERE
+        id = $5`, [name, phone, cpf, birthday, Number(id)]);
+
+      res.sendStatus(httpStatus.OK);
+
+  } catch (error) {
+    res.status(httpStatus.INTERNAL_SERVER_ERROR).send(error.message);
+  }
+};
