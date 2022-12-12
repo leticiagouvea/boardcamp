@@ -12,6 +12,13 @@ const gameSchema = joi.object({
   pricePerDay: joi.number().required().min(0)
 });
 
+const customerSchema = joi.object({
+  name: joi.string().required().min(2),
+  phone: joi.string().required().min(10).max(11),
+  cpf: joi.string().required().min(11).max(11),
+  birthday: joi.date().required()
+});
+
 export async function validateCategory (req, res, next) {
   const { name } = req.body;
 
@@ -37,5 +44,19 @@ export async function validateGame (req, res, next) {
   }
 
   res.locals.game = { name, image, stockTotal, categoryId, pricePerDay };
+  next();
+};
+
+export async function validateCustomer (req, res, next) {
+  const { name, phone, cpf, birthday } = req.body;
+
+  const validation = customerSchema.validate(req.body, { abortEarly: false });
+
+  if (validation.error) {
+    const error = validation.error.details.map(detail => detail.message);
+    return res.status(400).send(error);
+  }
+
+  res.locals.user = { name, phone, cpf, birthday };
   next();
 };
