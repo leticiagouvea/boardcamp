@@ -218,3 +218,61 @@ export async function getRentals(req, res) {
     res.status(httpStatus.INTERNAL_SERVER_ERROR).send(error.message);
   }
 };
+
+export async function createFinishedRental(req, res) {
+  const { id } = req.params;
+
+  try {
+    const rental = await connectionDB.query(`
+      SELECT
+        *
+      FROM
+        rentals
+      WHERE
+        id = $1;`, [id]);
+    
+    if (rental.rowCount === 0) {
+      return res.sendStatus(httpStatus.NOT_FOUND);
+    }
+
+    const isFinishedRental = rental.rows.find(value => value.returnDate !== null);
+
+    if (isFinishedRental) {
+      return res.sendStatus(httpStatus.BAD_REQUEST);
+    }
+
+    const rentalDelay = rental.rows.find(value => 
+      (Number(new Date().toLocaleDateString("pt-br").slice(0, 2))) -
+      (Number(value.rentDate.toLocaleDateString("pt-br").slice(0, 2))) > value.daysRented
+    );
+
+    if (rentalDelay) {
+      const daysDelay = (Number(new Date().toLocaleDateString("pt-br").slice(0, 2))) - rentalDelay.rentDate.toLocaleDateString("pt-br").slice(0, 2);
+
+      const delayFee = (daysDelay - rentalDelay.daysRented) * rentalDelay.originalPrice;
+
+      await connectionDB.query(`
+        UPDATE
+          rentals
+        SET
+          "returnDate" = $1, "delayFee" = $2
+        WHERE
+          id = $3;`, [date, delayFee, Number(id)]);
+
+      return res.sendStatus(httpStatus.OK);
+    }
+
+    await connectionDB.query(`
+      UPDATE
+        rentals
+      SET
+        "returnDate" = $1
+      WHERE
+        id = $2;`, [date, Number(id)]);
+    
+    res.sendStatus(httpStatus.OK);
+
+  } catch (error) {
+    res.status(httpStatus.INTERNAL_SERVER_ERROR).send(error.message);
+  }
+};
